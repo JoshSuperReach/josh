@@ -23,9 +23,20 @@
 - Should not happen: figures that aren't on the page
 - Should not happen: an answer from general knowledge
 
-**Use case:** none fits. The P1/P2 Proof catalogue has no YouTube entry, which may be a gap in the catalogue.
+**Use case:** none fits in the P1/P2 Proof catalogue, which may be a gap. The ticket's own Use Case field says "Retrieve YouTube video details".
 
-**ClickUp ticket:** none
+**ClickUp ticket:** [SR-15688 — TC-YT-002 Retrieve video metadata by video ID (youtubeVideoAgent)](https://app.clickup.com/t/9015603988/SR-15688)
+
+| # | Ticket criterion | Result | Evidence | Tester's comment |
+| --- | --- | --- | --- | --- |
+| 1 | Exactly one youtubeVideoAgent call using the exact video ID | Met | 14:26:52, `youtubeVideoAgent__youTubeVideo` with `v: "AI_nd0CGoEY"`, called once | agree |
+| 2 | Title and channel name match the video page | Met | 14:27:06 final message; tester checked against the page | agree |
+| 3 | Views and likes match the video page | Met | 193 views, 5 likes; tester checked against the page | agree |
+| 4 | Description returned and matches the opening on the page | Met | Description returned, cut short at "…leadership, education" | agree; cut short is acceptable |
+| 5 | Must not: call youtubeSearchAgent before or instead | Met | No youtubeSearchAgent call in the session | agree |
+| 6 | Must not: return details for a different video | Met | Thumbnail and result are for `AI_nd0CGoEY` | agree |
+| 7 | Must not: state figures not on the page | Met | Figures come from the tool result; tester confirmed | agree |
+| 8 | Must not: answer from general knowledge | Met | Every figure traces to the tool result | agree |
 
 **Test result against the criteria:** pass. The tester confirmed that the title, the channel (Curious with Ezra Chapman), 193 views and 5 likes match the video page on the day of the run.
 
@@ -53,9 +64,9 @@ None of these blocked the diagnosis.
 
 ## What went wrong
 
-| # | Failure | First went wrong at | Suggested code | Seen or inferred | Severity | Issue | Tester's comment |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | The agent told the user that the provider's (YouTube's) result had cut the description short. In fact the provider's result was saved complete; Superreach's `explore_source` read clipped it. The tool reported only that its response was incomplete, without a reason, and the agent filled in a cause its evidence doesn't support | Stage 5 (telling the user) | Agent behaviour · AB8 · no secondary codes · tag: logging gap | Seen, high confidence: the save receipt shows `bytesComplete: true` and the read shows `complete: false` | P3 | 1 | Agree. Cutting the description short is acceptable; blaming the wrong thing is not |
+| # | Failure | Ticket criterion | First went wrong at | Suggested code | Seen or inferred | Severity | Issue | Tester's comment |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | The agent told the user that the provider's (YouTube's) result had cut the description short. In fact the provider's result was saved complete; Superreach's `explore_source` read clipped it. The tool reported only that its response was incomplete, without a reason, and the agent filled in a cause its evidence doesn't support | beyond the ticket | Stage 5 (telling the user) | Agent behaviour · AB8 · no secondary codes · tag: logging gap | Seen, high confidence: the save receipt shows `bytesComplete: true` and the read shows `complete: false` | P3 | 1 | Agree. Cutting the description short is acceptable; blaming the wrong thing is not |
 
 Claude's original proposal also raised:
 
@@ -74,7 +85,7 @@ n/a. The agent made no unchecked assumption, and the user's primary goal was met
 ## Sources
 
 - Langfuse QA project, 2026-10-12.
-- Superreach session ID: `a2249110-6339-49b5-b805-f2909b42c3d2`. The link was not provided.
+- Superreach session: https://qa.superreach.ai/superreach-new/app/chat/persona/6accdbd8f59326fbc9bb3fa7/session/a2249110-6339-49b5-b805-f2909b42c3d2
 - Trace links:
   - Clipped description read: https://cloud.langfuse.com/project/cmuvnpwpv02xbad0cc5a61nj4/traces/ff9c2a25a84d0d2d41e2542cf7da843c
   - Final message: https://cloud.langfuse.com/project/cmuvnpwpv02xbad0cc5a61nj4/traces/766f44c4246b5ac0acdbb7fd1af23b24
@@ -103,9 +114,9 @@ n/a. The agent made no unchecked assumption, and the user's primary goal was met
     scope:
     prevents_future_asks:
   environment: qa
-  session_url:
+  session_url: https://qa.superreach.ai/superreach-new/app/chat/persona/6accdbd8f59326fbc9bb3fa7/session/a2249110-6339-49b5-b805-f2909b42c3d2
   trace_url: https://cloud.langfuse.com/project/cmuvnpwpv02xbad0cc5a61nj4/traces/766f44c4246b5ac0acdbb7fd1af23b24
-  clickup_task:
+  clickup_task: SR-15688
   session_date: 2026-10-12
   skill_version: 2026-10-13.4
 ```
@@ -116,7 +127,7 @@ Paste this into the bug ticket and attach this file.
 
 **Title:** Agent tells the user YouTube cut the description short, when Superreach's own read tool did
 
-**Session:** `a2249110-6339-49b5-b805-f2909b42c3d2` · QA · 2026-10-12 14:26:48–14:27:09 UK time · runs examined: 1 · diagnosed with skill version 2026-10-13.4
+**Session:** https://qa.superreach.ai/superreach-new/app/chat/persona/6accdbd8f59326fbc9bb3fa7/session/a2249110-6339-49b5-b805-f2909b42c3d2 · QA · 2026-10-12 14:26:48–14:27:09 UK time · runs examined: 1 · diagnosed with skill version 2026-10-13.4
 
 **Use case:** none fits (no YouTube entry in P1/P2 Proof)
 
@@ -136,12 +147,15 @@ Paste this into the bug ticket and attach this file.
 
 The test case passed on all of these; the tester confirmed the figures.
 
+**Ticket criteria:** 8 met, 0 not met, 0 can't tell from the trace.
+
 ### Issue 1: Agent tells the user YouTube cut the description short, when Superreach's own read tool did
 
 - **What happened:**
   - At 14:27:06 the agent told the user: "the stored description text is truncated at that point in the provider result".
   - The YouTube result was saved complete at 14:26:52 (`bytesComplete: true`, 38.3 KB).
   - The cut was made by Superreach's `explore_source` read at 14:27:04 (`complete: false`, description content in `omittedPaths`).
+- **Ticket criterion:** beyond the ticket
 - **Expected:** Say that the description shown is cut short, without blaming the provider. A cut-short description is acceptable.
 - **Suggested classification:** Agent behaviour · primary AB8 · secondary none · tags: logging gap
 - **Suggested severity:** P3 · **Consistency:** Once
